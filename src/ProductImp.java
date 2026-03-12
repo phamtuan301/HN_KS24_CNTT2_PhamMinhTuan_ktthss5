@@ -3,10 +3,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-public abstract class ProductImp implements IProduct {
+public class ProductImp implements IProduct {
     protected List<Product> products = new ArrayList<>();
     @Override
-    public void CreateProduct(Product product) throws InvalidProductException {
+    public void createProduct(Product product) throws InvalidProductException {
         boolean productExists =
                 products.stream()
                         .anyMatch(p -> p.getId() == product.getId());
@@ -18,18 +18,26 @@ public abstract class ProductImp implements IProduct {
         System.out.println("Them san pham thanh cong");
     }
     @Override
-    public Product GetProduct(Product product) {
-        System.out.println("----------");
-        System.out.println("|ID: " + product.getId());
-        System.out.println("|Name: " + product.getName());
-        System.out.println("|Price: " + product.getPrice());
-        System.out.println("|Quantity: " + product.getQuantity());
-        System.out.println("|Category: " + product.getCategory());
-        return product;
+    public Product getProduct(int id) throws InvalidProductException {
+        Optional<Product> optionalProduct =
+                products.stream()
+                        .filter(p -> p.getId() == id)
+                        .findFirst();
+        if (optionalProduct.isPresent()) {
+            Product product = optionalProduct.get();
+            System.out.println("----------");
+            System.out.println("|ID: " + product.getId());
+            System.out.println("|Name: " + product.getName());
+            System.out.println("|Price: " + product.getPrice());
+            System.out.println("|Quantity: " + product.getQuantity());
+            System.out.println("|Category: " + product.getCategory());
+            return product;
+        } else {
+            throw new InvalidProductException("Khong tim thay san pham");
+        }
     }
-
-    public Product UpdateProduct(Product product)
-            throws InvalidProductException {
+    @Override
+    public void updateProduct(Product product) throws InvalidProductException {
         Optional<Product> optionalProduct =
                 products.stream()
                         .filter(p -> p.getId() == product.getId())
@@ -37,28 +45,42 @@ public abstract class ProductImp implements IProduct {
         if (optionalProduct.isPresent()) {
             Product existingProduct = optionalProduct.get();
             existingProduct.setQuantity(product.getQuantity());
-            return existingProduct;
+            System.out.println("Cap nhat thanh cong");
         } else {
             throw new InvalidProductException(
                     "ID " + product.getId() + " khong ton tai");
         }
     }
+    @Override
+    public void deleteProduct(int id) throws InvalidProductException {
+        boolean removed =
+                products.removeIf(p -> p.getId() == id);
+        if (!removed) {
+            throw new InvalidProductException(
+                    "Khong tim thay san pham de xoa");
+        }
 
-    public void DeleteProduct() {
-        products.removeIf(p -> p.getQuantity() == 0);
-        System.out.println("Da xoa cac san pham het hang");
+        System.out.println("Xoa san pham thanh cong");
+    }
+    public void printAllProducts() {
+        if (products.isEmpty()) {
+            System.out.println("Danh sach rong");
+            return;
+        }
+        products.forEach(p -> {
+            System.out.println(p);
+        });
     }
 
     public void printMenu() {
         Scanner scanner = new Scanner(System.in);
         int choice;
         do {
-
             System.out.println("========= PRODUCT MANAGEMENT SYSTEM =========");
             System.out.println("1. Them san pham");
             System.out.println("2. Hien thi danh sach");
             System.out.println("3. Cap nhat so luong");
-            System.out.println("4. Xoa san pham het hang");
+            System.out.println("4. Xoa san pham");
             System.out.println("5. Thoat");
             choice = scanner.nextInt();
             switch (choice) {
@@ -74,10 +96,12 @@ public abstract class ProductImp implements IProduct {
 
                     System.out.println("Nhap quantity:");
                     int quantity = scanner.nextInt();
+
                     System.out.println("Nhap category:");
                     String category = scanner.next();
+
                     try {
-                        CreateProduct(
+                        createProduct(
                                 new Product(id, name, price, quantity, category)
                         );
                     } catch (InvalidProductException e) {
@@ -86,10 +110,9 @@ public abstract class ProductImp implements IProduct {
 
                     break;
                 case 2:
-                    products.forEach(this::GetProduct);
+                    printAllProducts();
                     break;
                 case 3:
-
                     System.out.println("Nhap ID can update:");
                     int updateId = scanner.nextInt();
 
@@ -97,16 +120,23 @@ public abstract class ProductImp implements IProduct {
                     int newQuantity = scanner.nextInt();
 
                     try {
-                        UpdateProduct(
+                        updateProduct(
                                 new Product(updateId, "", 0, newQuantity, "")
                         );
                     } catch (InvalidProductException e) {
                         System.out.println(e.getMessage());
                     }
                     break;
-
                 case 4:
-                    DeleteProduct();
+                    System.out.println("Nhap ID can xoa:");
+                    int deleteId = scanner.nextInt();
+
+                    try {
+                        deleteProduct(deleteId);
+                    } catch (InvalidProductException e) {
+                        System.out.println(e.getMessage());
+                    }
+
                     break;
 
             }
